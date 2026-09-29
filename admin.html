@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firr Pay - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #020617; --bg-card: rgba(15, 23, 42, 0.95);
+            --primary: #38bdf8; --text-main: #f8fafc; --text-muted: #94a3b8;
+            --success: #22c55e; --warning: #eab308; --danger: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        body { background: var(--bg-dark); color: var(--text-main); padding: 15px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        h1 { font-size: 20px; margin-bottom: 5px; color: var(--primary); }
+        .login-box { max-width: 400px; margin: 80px auto; text-align: center; }
+        input, select { width: 100%; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; margin-bottom: 12px; outline: none; }
+        button { background: var(--primary); color: var(--bg-dark); border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; width: 100%; }
+        .tx-item { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+        .badge { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .badge-Pending { background: rgba(234, 179, 8, 0.2); color: var(--warning); }
+        .badge-Diproses { background: rgba(56, 189, 248, 0.2); color: var(--primary); }
+        .badge-Selesai { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+        .badge-Dibatalkan { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .row-flex { display: flex; gap: 8px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- LOGIN SECTION -->
+        <div id="loginSection" class="card login-box">
+            <h1>🔐 Admin Panel Login</h1>
+            <p style="color:var(--text-muted); font-size:12px; margin-bottom:15px;">Masukkan PIN Admin Anda</p>
+            <input type="password" id="adminPinInput" placeholder="PIN Admin (Default: 123456)">
+            <button onclick="loginAdmin()">Masuk Dashboard</button>
+        </div>
+
+        <!-- DASHBOARD SECTION -->
+        <div id="dashboardSection" style="display: none;">
+            <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h1>⚡ Firr Pay Admin Dashboard</h1>
+                    <p style="color:var(--text-muted); font-size:12px;">Sinkronisasi Real-Time Aktif</p>
+                </div>
+                <button onclick="location.reload()" style="width:auto; padding:8px 14px; font-size:12px;">Keluar</button>
+            </div>
+
+            <div class="card">
+                <h2 style="font-size:16px; margin-bottom:12px;">Daftar Transaksi Masuk</h2>
+                <div id="txList">Memuat data...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let adminPin = "";
+
+        function loginAdmin() {
+            adminPin = document.getElementById('adminPinInput').value;
+            if(!adminPin) { alert("Masukkan PIN!"); return; }
+            
+            // Tes koneksi PIN dengan mengambil data
+            fetch('/api/transactions')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('dashboardSection').style.display = 'block';
+                    loadTransactions();
+                    setInterval(loadTransactions, 5000); // Auto-refresh setiap 5 detik
+                })
+                .catch(() => alert("Gagal terhubung ke server."));
+        }
+
+        async function loadTransactions() {
+            try {
+                let res = await fetch('/api/transactions');
+                let data = await res.json();
+                let list = document.getElementById('txList');
+                
+                if(data.length === 0) {
+                    list.innerHTML = '<p style="color:var(--text-muted); text-align:center;">Belum ada transaksi.</p>';
+                    return;
+                }
+
+                list.innerHTML = data.map(t => `
+                    <div class="tx-item">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <strong>${t.id} - ${t.jenis}</strong>
+                            <span class="badge badge-${t.status}">${t.status}</span>
+                        </div>
+                        <div style="font-size:13px; color:var(--text-muted); line-height:1.5;">
+                            Nama: <strong style="color:white;">${t.nama}</strong><br>
+                            Tujuan: ${t.tujuan} (${t.nomor})<br>
+                            Nominal: Rp ${t.nominal.toLocaleString()} | Admin: Rp ${t.adminFee.toLocaleString()}<br>
+                            Total Tagihan: <strong style="color:var(--primary);">Rp ${t.total.toLocaleString()}</strong>
+                        </div>
+                        <div class="row-flex">
+                            <select id="status-${t.id}">
+                                <option value="Pending" ${t.status==='Pending'?'selected':''}>Pending</option>
+                                <option value="Diproses" ${t.status==='Diproses'?'selected':''}>Diproses</option>
+                                <option value="Selesai" ${t.status==='Selesai'?'selected':''}>Selesai</option>
+                                <option value="Dibatalkan" ${t.status==='Dibatalkan'?'selected':''}>Dibatalkan</option>
+                            </select>
+                            <button style="width:120px;" onclick="updateStatus('${t.id}')">Update</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch(e) {
+                console.error("Gagal memuat transaksi");
+            }
+        }
+
+        async function updateStatus(id) {
+            let newStatus = document.getElementById(`status-${id}`).value;
+            try {
+                let res = await fetch(`/api/transactions/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus, pin: adminPin })
+                });
+                let result = await res.json();
+                if(result.success) {
+                    alert("Status berhasil diperbarui!");
+                    loadTransactions();
+                } else {
+                    alert("Gagal: " + result.message);
+                }
+            } catch(e) {
+                alert("Kesalahan koneksi.");
+            }
+        }
+    </script>
+</body>
+</html>

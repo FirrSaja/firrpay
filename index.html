@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firr Pay - Layanan Transaksi Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #020617; 
+            --bg-card: rgba(15, 23, 42, 0.9); 
+            --primary: #38bdf8; 
+            --primary-gradient: linear-gradient(135deg, #38bdf8, #2563eb);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-glow: rgba(56, 189, 248, 0.3);
+            --wa-color: #25D366;
+            --danger: #ef4444;
+            --warning: #eab308;
+            --success: #22c55e;
+            --transition: all 0.3s ease;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        body {
+            background: radial-gradient(circle at top right, #1e3a8a 0%, var(--bg-dark) 60%);
+            color: var(--text-main);
+            display: flex; justify-content: center; align-items: flex-start;
+            min-height: 100vh; padding: 12px;
+        }
+        .app-card {
+            background: var(--bg-card); backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            width: 100%; max-width: 500px; border-radius: 24px;
+            padding: 20px 16px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            margin-bottom: 30px;
+        }
+        .header { text-align: center; margin-bottom: 20px; }
+        .logo {
+            width: 60px; height: 60px; background: var(--primary-gradient);
+            border-radius: 50%; margin: 0 auto 10px; display: flex;
+            align-items: center; justify-content: center; font-size: 26px;
+            font-weight: 700; color: white; box-shadow: 0 0 20px var(--border-glow);
+        }
+        .header h1 { font-size: 22px; font-weight: 700; }
+        .header p { font-size: 12px; color: var(--text-muted); }
+        
+        .nav-top { display: flex; gap: 8px; margin-bottom: 16px; }
+        .nav-btn {
+            flex: 1; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted); border-radius: 12px; font-weight: 600; font-size: 13px; cursor: pointer;
+        }
+        .nav-btn.active { background: var(--primary); color: var(--bg-dark); border-color: var(--primary); }
+
+        .tabs { display: flex; background: rgba(0, 0, 0, 0.4); padding: 4px; border-radius: 14px; margin-bottom: 16px; }
+        .tab-btn { flex: 1; padding: 10px 0; background: transparent; border: none; color: var(--text-muted); font-size: 12px; font-weight: 600; border-radius: 10px; cursor: pointer; }
+        .tab-btn.active { background: var(--primary-gradient); color: white; box-shadow: 0 4px 12px var(--border-glow); }
+
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+        .form-group input {
+            width: 100%; background: rgba(0, 0, 0, 0.3); border: 1.5px solid rgba(255, 255, 255, 0.08);
+            padding: 13px; border-radius: 12px; color: var(--text-main); font-size: 14px; outline: none;
+        }
+        .form-group input:focus { border-color: var(--primary); }
+
+        .info-box { background: rgba(56, 189, 248, 0.1); border-left: 4px solid var(--primary); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 12px; line-height: 1.4; }
+        .info-box.warning { background: rgba(234, 179, 8, 0.1); border-left-color: var(--warning); color: #fef08a; }
+
+        /* QRIS BOX */
+        .qris-box {
+            display: none;
+            background: rgba(56, 189, 248, 0.05);
+            border: 1px dashed var(--primary);
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .qris-box img {
+            max-width: 150px;
+            border-radius: 10px;
+            margin: 8px 0;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+
+        .summary { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); padding: 14px; border-radius: 14px; margin-bottom: 16px; }
+        .sum-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+        .sum-row span:last-child { color: var(--text-main); font-weight: 500; }
+        .sum-total { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); font-size: 14px; }
+        .sum-total .price { font-size: 18px; font-weight: 700; color: var(--primary); }
+
+        .btn-main {
+            width: 100%; background: var(--primary-gradient); color: white; padding: 15px; border: none;
+            border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 20px rgba(56,189,248,0.3);
+        }
+        .btn-main:active { transform: scale(0.97); }
+
+        .history-card { background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 13px; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .badge-Pending { background: rgba(234, 179, 8, 0.2); color: var(--warning); }
+        .badge-Diproses { background: rgba(56, 189, 248, 0.2); color: var(--primary); }
+        .badge-Selesai { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+        .badge-Dibatalkan { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+    </style>
+</head>
+<body>
+    <div class="app-card">
+        <div class="header">
+            <div class="logo">F</div>
+            <h1>Firr Pay</h1>
+            <p>Sistem Layanan Tunai & E-Wallet Terintegrasi</p>
+        </div>
+
+        <div class="nav-top">
+            <button class="nav-btn active" id="btnTabOrder" onclick="switchPage('order')">Buat Transaksi</button>
+            <button class="nav-btn" id="btnTabTrack" onclick="switchPage('track')">Cek Status Pesanan</button>
+        </div>
+
+        <!-- MENU ORDER -->
+        <div id="pageOrder">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="setMode('ewallet', this)">E-Wallet</button>
+                <button class="tab-btn" onclick="setMode('bank', this)">Bank</button>
+                <button class="tab-btn" onclick="setMode('tarik', this)">Tarik Tunai</button>
+            </div>
+
+            <div class="info-box" id="infoBox"></div>
+
+            <!-- QRIS & Rekening Manual (Khusus Tarik Tunai) -->
+            <div class="qris-box" id="qrisBox">
+                <div style="font-size: 12px; color: var(--primary); font-weight: 600;">SCAN QRIS UNTUK TARIK TUNAI</div>
+                <img src="https://i.ibb.co.com/cKN4dQrz/Screenshot-2026-09-26-18-08-54-626-com-gojek-gopay-edit.jpg" alt="QRIS Firr Pay">
+                <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 6px;">
+                    Atau transfer manual ke:<br>
+                    ShopeePay: <span style="color: white; font-weight: 600;">085707530814</span><br>
+                    SeaBank: <span style="color: white; font-weight: 600;">901113171908</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Nama & Kelas</label>
+                <input type="text" id="nama" placeholder="Contoh: Budi (XI RPL 3)">
+            </div>
+            <div class="form-group">
+                <label id="labelTujuan">Tujuan</label>
+                <input type="text" id="tujuan" placeholder="Contoh: DANA / SeaBank">
+            </div>
+            <div class="form-group">
+                <label id="labelNomor">Nomor HP / Rekening</label>
+                <input type="number" id="nomor" placeholder="0812xxxxxxxx">
+            </div>
+            <div class="form-group">
+                <label>Nominal (Rp)</label>
+                <input type="number" id="nominal" placeholder="10000" oninput="calculate()">
+            </div>
+
+            <div class="summary">
+                <div class="sum-row"><span>Nominal</span><span id="txtNominal">Rp 0</span></div>
+                <div class="sum-row"><span>Biaya Admin</span><span id="txtAdmin">Rp 0</span></div>
+                <div class="sum-total"><span>Total Bayar</span><span class="price" id="txtTotal">Rp 0</span></div>
+            </div>
+
+            <button class="btn-main" onclick="submitTransaction()">Kirim Pesanan & Hubungkan</button>
+        </div>
+
+        <!-- MENU LACAK STATUS -->
+        <div id="pageTrack" style="display: none;">
+            <div class="form-group">
+                <label>Cari Berdasarkan Nama / No HP / ID Transaksi</label>
+                <input type="text" id="searchQuery" placeholder="Ketik nama kamu..." oninput="trackTransactions()">
+            </div>
+            <div id="trackResult" style="margin-top: 15px;">
+                <p style="text-align: center; color: var(--text-muted); font-size: 13px;">Masukkan nama untuk melihat status pesanan real-time.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'ewallet';
+        const ownerWA = "6285707530814";
+
+        function switchPage(page) {
+            if(page === 'order') {
+                document.getElementById('pageOrder').style.display = 'block';
+                document.getElementById('pageTrack').style.display = 'none';
+                document.getElementById('btnTabOrder').classList.add('active');
+                document.getElementById('btnTabTrack').classList.remove('active');
+            } else {
+                document.getElementById('pageOrder').style.display = 'none';
+                document.getElementById('pageTrack').style.display = 'block';
+                document.getElementById('btnTabTrack').classList.add('active');
+                document.getElementById('btnTabOrder').classList.remove('active');
+            }
+        }
+
+        function setMode(mode, el) {
+            currentMode = mode;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            if(el) el.classList.add('active');
+
+            const infoBox = document.getElementById('infoBox');
+            const qrisBox = document.getElementById('qrisBox');
+
+            if(mode === 'ewallet') {
+                infoBox.className = 'info-box';
+                infoBox.innerHTML = '<strong>E-Wallet:</strong> Isi data, kirim pesanan, lalu bayar tunai + admin ke Firnanda di kelas.';
+                document.getElementById('labelTujuan').innerText = "Tujuan E-Wallet";
+                document.getElementById('labelNomor').innerText = "Nomor HP E-Wallet";
+                qrisBox.style.display = "none";
+            } else if(mode === 'bank') {
+                infoBox.className = 'info-box';
+                infoBox.innerHTML = '<strong>Transfer Bank:</strong> Masukkan nama bank dan rekening tujuan dengan benar.';
+                document.getElementById('labelTujuan').innerText = "Nama Bank Tujuan";
+                document.getElementById('labelNomor').innerText = "Nomor Rekening";
+                qrisBox.style.display = "none";
+            } else {
+                infoBox.className = 'info-box warning';
+                infoBox.innerHTML = '⚠️ <strong>Tarik Tunai:</strong> Pastikan ketersediaan saldo tunai dengan Firnanda terlebih dahulu.';
+                document.getElementById('labelTujuan').innerText = "Sumber (Cth: DANA)";
+                document.getElementById('labelNomor').innerText = "Nomor Pengirim";
+                qrisBox.style.display = "block"; // Kotak QRIS & Rekening muncul di sini!
+            }
+            calculate();
+        }
+
+        function formatRupiah(num) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+        }
+
+        function getAdminFee(mode, amount) {
+            if (mode === 'ewallet') return amount < 100000 ? 1000 : 2000;
+            if (mode === 'bank') return amount < 100000 ? 2000 : 4000;
+            return amount < 100000 ? 2000 : 3000;
+        }
+
+        function calculate() {
+            let amount = parseInt(document.getElementById('nominal').value) || 0;
+            let admin = amount > 0 ? getAdminFee(currentMode, amount) : 0;
+            document.getElementById('txtNominal').innerText = formatRupiah(amount);
+            document.getElementById('txtAdmin').innerText = formatRupiah(admin);
+            document.getElementById('txtTotal').innerText = formatRupiah(amount + admin);
+        }
+
+        async function submitTransaction() {
+            let nama = document.getElementById('nama').value;
+            let tujuan = document.getElementById('tujuan').value;
+            let nomor = document.getElementById('nomor').value;
+            let amount = parseInt(document.getElementById('nominal').value) || 0;
+            let minTrans = currentMode === 'tarik' ? 15000 : 10000;
+
+            if (!nama || !tujuan || !nomor || amount < minTrans) {
+                alert("Mohon lengkapi formulir dengan benar. Minimal transaksi Rp " + minTrans);
+                return;
+            }
+
+            let adminFee = getAdminFee(currentMode, amount);
+            let total = amount + adminFee;
+            let jenisText = currentMode === 'ewallet' ? 'Top Up E-Wallet' : currentMode === 'bank' ? 'Transfer Bank' : 'Tarik Tunai';
+
+            try {
+                let res = await fetch('/api/transactions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jenis: jenisText, nama, tujuan, nomor, nominal: amount, adminFee, total })
+                });
+                let result = await res.json();
+                if(result.success) {
+                    let pesan = `Halo *Firr Pay* 🚀\n\n*ID:* ${result.data.id}\n*Jenis:* ${jenisText}\n*Nama:* ${nama}\n*Tujuan:* ${tujuan} (${nomor})\n*Total:* ${formatRupiah(total)}\n\n_Segera diproses setelah konfirmasi di kelas._`;
+                    window.open(`https://wa.me/${ownerWA}?text=${encodeURIComponent(pesan)}`, '_blank');
+                    switchPage('track');
+                    document.getElementById('searchQuery').value = nama;
+                    trackTransactions();
+                } else {
+                    alert("Gagal menyimpan transaksi: " + result.message);
+                }
+            } catch(e) {
+                alert("Terjadi kesalahan jaringan.");
+            }
+        }
+
+        async function trackTransactions() {
+            let q = document.getElementById('searchQuery').value;
+            let container = document.getElementById('trackResult');
+            if(!q) { container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:13px;">Ketik pencarian...</p>'; return; }
+
+            try {
+                let res = await fetch(`/api/track?q=${encodeURIComponent(q)}`);
+                let data = await res.json();
+                if(data.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:13px;">Tidak ada transaksi ditemukan.</p>';
+                    return;
+                }
+                container.innerHTML = data.map(t => `
+                    <div class="history-card">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                            <strong>${t.id} - ${t.jenis}</strong>
+                            <span class="badge badge-${t.status}">${t.status}</span>
+                        </div>
+                        <div style="color:var(--text-muted); font-size:12px;">
+                            Nama: <strong>${t.nama}</strong><br>
+                            Tujuan: ${t.tujuan} (${t.nomor})<br>
+                            Total: <span style="color:var(--primary); font-weight:700;">${formatRupiah(t.total)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch(e) {
+                container.innerHTML = '<p style="text-align:center; color:var(--danger); font-size:13px;">Gagal memuat data.</p>';
+            }
+        }
+
+        window.onload = () => setMode('ewallet', document.querySelector('.tab-btn.active'));
+    </script>
+</body>
+</html>
